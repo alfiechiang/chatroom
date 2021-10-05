@@ -55,13 +55,14 @@ export default {
   data(){
     return{
       nickname:""
+      
     }
   },
   mounted() {},
   methods: {
     enterChatRoom() {
       let domain =location.hostname;
-      let ws = new WebSocket("ws://"+domain+":2022/ws");
+      let ws = new WebSocket("ws://"+domain+":2022/ws?nickname="+this.nickname);
       ws.onerror = function (evt) {
         console.log(evt);
       };
@@ -69,6 +70,9 @@ export default {
         console.log("Already connected");
         // WebSocket 已连接上的回调
       };
+      ws.onmessage=function(evt){
+        console.log(evt.data)
+      }
     },
   },
 };
