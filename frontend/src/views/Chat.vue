@@ -14,9 +14,10 @@
           <div>聊天内容</div>
           <div class="msg-list" id="msg-list">
             <div class="message">
-              <div class="meta"><span class="author"></span> at </div>
               <div>
-                <span class="content" style="white-space: pre-wrap;"></span>
+                <span class="content" style="white-space: pre-wrap;" v-for="msg in msglist.chat" v-bind:key="msg.content">
+                  {{msg.content}}
+                </span>
               </div>
             </div>
           </div>
@@ -24,8 +25,10 @@
         <div class="col-md-4">
           <div>當前在線用戶數:<font color="red">2</font>
           </div>
-          <div class="user-list">
-            用户：@江中智 加入时间：2021-08-10
+          <div class="user-list" >
+            <div v-for="msg in msglist.invitelist" v-bind:key="msg.content">
+              {{msg.content}}
+            </div>
           </div>
         </div>
       </div>
@@ -54,7 +57,11 @@
 export default {
   data(){
     return{
-      nickname:""
+      nickname:"",
+      msglist:{
+        chat:[],
+        invitelist:[]
+      }
       
     }
   },
@@ -70,8 +77,19 @@ export default {
         console.log("Already connected");
         // WebSocket 已连接上的回调
       };
-      ws.onmessage=function(evt){
-        console.log(evt.data)
+      ws.onmessage=(evt)=>{
+        let data = JSON.parse(evt.data);
+        let type =data.type;
+        switch(type){
+          case 1:
+            this.msglist.chat.push(data);
+          break;
+          case 2:
+            this.msglist.invitelist.push(data);
+          break;
+        }
+
+
       }
     },
   },
