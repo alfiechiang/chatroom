@@ -3,6 +3,7 @@ package logic
 import (
 	"context"
 	"time"
+
 	"nhooyr.io/websocket"
 	"nhooyr.io/websocket/wsjson"
 )
@@ -11,19 +12,18 @@ type User struct {
 	MessageChannel chan *Message `json:"-"`
 	Nickname       string
 	EnterAt        time.Time `json:"enter_at"`
-	Ctx  context.Context
-	Conn *websocket.Conn
+	Ctx            context.Context
+	Conn           *websocket.Conn
 }
 
-func NewUser(nickname string,conn *websocket.Conn,ctx context.Context)(*User){
+func NewUser(nickname string, conn *websocket.Conn, ctx context.Context) *User {
 	return &User{
 		MessageChannel: make(chan *Message),
 		Nickname:       nickname,
 		EnterAt:        time.Now(),
-		Ctx: ctx,
+		Ctx:            ctx,
 		Conn:           conn,
 	}
-
 
 }
 

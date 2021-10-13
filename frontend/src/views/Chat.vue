@@ -13,10 +13,8 @@
         <div class="col-md-6">
           <div>聊天内容</div>
           <div class="msg-list" id="msg-list">
-            <div class="message">
-              <div v-for="msg in msglist.chat" v-bind:key="msg.content">
-                <p >{{ msg.content }}</p>
-              </div>
+            <div class="message" v-for="msg in msglist.chat" v-bind:key="msg.content" :class="{ system: msg.type==0|| msg.type==5,other:msg.type==3&&nickname!==msg.nickname,myself:nickname==msg.nickname} ">
+                <span class="content" style="white-space: pre-wrap;">{{msg.content}}</span>
             </div>
           </div>
         </div>
@@ -67,14 +65,14 @@ export default {
   mounted() {},
   methods: {
     sendMessage() {
-      let msg = JSON.stringify({ content: this.chatmessage });
+      let msg = JSON.stringify({ content: this.chatmessage,type:'3'});
 
       this.ws.send(msg);
     },
     enterChatRoom() {
       let domain = location.hostname;
       this.ws = new WebSocket(
-        "ws://" + domain + ":2022/ws?nickname=" + this.nickname
+        "ws://" + domain + ":2023/ws?nickname=" + this.nickname
       );
       this.ws.onerror = function (evt) {
         console.log(evt);
@@ -87,6 +85,9 @@ export default {
         let data = JSON.parse(evt.data);
         let type = data.type;
         switch (type) {
+           case 0:
+            this.msglist.chat.push(data);
+            break;
           case 1:
             this.msglist.chat.push(data);
             break;
@@ -96,12 +97,22 @@ export default {
           case 3:
             this.msglist.chat.push(data);
             break;
+          case 5:
+            if(this.msglist.chat.nickname!==this.nickname){
+              this.msglist.chat.push(data);
+            }
+            this.msglist=[];
+            this.nickname='';
+            this.ws.close();
+            break;
         }
       };
     },
-    leaveChatRoom(){
-      this.ws.close();
-    }
+    leaveChatRoom() {
+      let msg = JSON.stringify({ content: "用戶已離開",type:'5' });
+      this.ws.send(msg);
+     // this.ws.close();
+    },
   },
 };
 </script>
@@ -122,18 +133,23 @@ export default {
 .message {
   align-self: flex-start;
 }
+
 .message .meta {
   color: #ccc;
   font-size: 12px;
 }
+
 .message .author {
   color: #999;
   font-weight: bold;
 }
+
 .myself {
   background-color: #b0e46e !important;
+  color: #ccc;
   align-self: flex-end;
 }
+
 .myself .meta {
   color: #2b2b2b;
 }
@@ -142,6 +158,12 @@ export default {
   background-color: #f3f3f3;
   color: #ccc;
   align-self: center;
+}
+
+.other {
+  background-color: #f3f3f3;
+  color: #ccc;
+  align-self: start;
 }
 
 .user-list {

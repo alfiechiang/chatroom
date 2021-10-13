@@ -3,22 +3,17 @@ package controller
 import (
 	"backend/src/logic"
 	"context"
-
-	// "fmt"
 	"log"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"nhooyr.io/websocket"
-	// "nhooyr.io/websocket/wsjson"
 )
-
 
 //	users: make(map[string]*User),
 
 var Users map[string]*logic.User = make(map[string]*logic.User)
 var brodcast = logic.NewBrodcast()
-
 
 func ChatWebSocketInit(c *gin.Context) {
 
@@ -43,7 +38,6 @@ func ChatWebSocketInit(c *gin.Context) {
 	brodcast.Users = append(brodcast.Users, user)
 	msg := logic.InviteMessage(nickname)
 	brodcast.MessageChannel <- msg
-
 	brodcast.ReceiveMessage(user)
 
 	//conn.Close(websocket.StatusNormalClosure, "")

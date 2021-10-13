@@ -2,11 +2,11 @@ package logic
 
 import (
 	"context"
-	"fmt"
-
-	//"fmt"
 	"errors"
+	"fmt"
 	"log"
+	"strconv"
+
 	"nhooyr.io/websocket"
 	"nhooyr.io/websocket/wsjson"
 )
@@ -59,8 +59,14 @@ func (b *Brodcast) ReceiveMessage(u *User) {
 			log.Println(err)
 			return
 		}
+		fmt.Println("ceffefe")
 
-		msg := ChatMessage(receiveMsg["content"], 3)
+		ty, err := strconv.Atoi(receiveMsg["type"])
+		if err != nil {
+			fmt.Println("switch string to int faild")
+		}
+
+		msg := ChatMessage(receiveMsg["content"], ty, u.Nickname)
 		b.MessageChannel <- msg
 	}
 
