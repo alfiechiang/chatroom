@@ -3,14 +3,22 @@ package controller
 import (
 	"backend/src/logic"
 	"context"
+
+	// "fmt"
 	"log"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"nhooyr.io/websocket"
+	// "nhooyr.io/websocket/wsjson"
 )
 
-var Users []*logic.User = make([]*logic.User, 0)
+
+//	users: make(map[string]*User),
+
+var Users map[string]*logic.User = make(map[string]*logic.User)
+var brodcast = logic.NewBrodcast()
+
 
 func ChatWebSocketInit(c *gin.Context) {
 
@@ -20,41 +28,24 @@ func ChatWebSocketInit(c *gin.Context) {
 		return
 	}
 
-	nickname := c.Request.FormValue("nickname")
-	//defer conn.Close(websocket.StatusInternalError, "Internal Error")
-
-	_, cancel := context.WithTimeout(c, time.Second*30)
+	ctx, cancel := context.WithTimeout(c, time.Second*30)
 	defer cancel()
 
-	user := &logic.User{
-		MessageChannel: make(chan *logic.Message),
-		Nickname:       nickname,
-		EnterAt:        time.Now(),
-		Conn:           conn,
-	}
+	nickname := c.Request.FormValue("nickname")
 
+	user := logic.NewUser(nickname, conn, ctx)
 	go user.SendMessage(c)
 
-	user.MessageChannel <- &logic.Message{
-		Content: nickname + "您好，欢迎加入聊天室！",
-		Type:    1,
-	}
+	go brodcast.Start()
 
-	Users = append(Users, user)
-	msg := &logic.Message{
-		Content: nickname + "加入时间：" + time.Now().Format("yyyy/MM/dd HH:mm:ss"),
-		Type:    2,
-	}
+	user.MessageChannel <- logic.WelcomeMessage(nickname)
 
-	for _, user := range Users {
-		user.MessageChannel <- msg
-	}
-	// var v interface{}
-	// err = wsjson.Read(ctx, conn, &v)
-	// if err != nil {
-	// 	log.Println(err)
-	// 	return
-	// }
+	brodcast.Users = append(brodcast.Users, user)
+	msg := logic.InviteMessage(nickname)
+	brodcast.MessageChannel <- msg
+
+	brodcast.ReceiveMessage(user)
+
 	//conn.Close(websocket.StatusNormalClosure, "")
 
 }

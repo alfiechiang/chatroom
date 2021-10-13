@@ -14,10 +14,8 @@
           <div>聊天内容</div>
           <div class="msg-list" id="msg-list">
             <div class="message">
-              <div>
-                <span class="content" style="white-space: pre-wrap;" v-for="msg in msglist.chat" v-bind:key="msg.content">
-                  {{msg.content}}
-                </span>
+              <div v-for="msg in msglist.chat" v-bind:key="msg.content">
+                <p >{{ msg.content }}</p>
               </div>
             </div>
           </div>
@@ -25,9 +23,9 @@
         <div class="col-md-4">
           <div>當前在線用戶數:<font color="red">2</font>
           </div>
-          <div class="user-list" >
+          <div class="user-list">
             <div v-for="msg in msglist.invitelist" v-bind:key="msg.content">
-              {{msg.content}}
+              <p class="content" style="white-space: pre-wrap;">{{ msg.content }}</p><br>
             </div>
           </div>
         </div>
@@ -43,11 +41,11 @@
               <span class="input-group-addon">您的昵稱</span>
               <input type="text" class="form-control" v-model="nickname" aria-describedby="inputGroupSuccess1Status">
             </div>
-            <input type="submit" class="form-control btn-primary text-center" value="離開聊天室">
+            <input type="submit" class="form-control btn-primary text-center" @click="leaveChatRoom" value="離開聊天室">
             <input type="submit" class="form-control btn-primary text-center" @click="enterChatRoom" value="進入聊天室">
           </div>
-          <textarea id="chat-content" rows="3" class="form-control" placeholder="在此收入聊天內容。ctrl/command+enter 換行，enter 發送"></textarea>&nbsp;
-          <input type="button" value="發送(Enter)" class="btn-primary form-control">
+          <textarea id="chat-content" v-model="chatmessage" rows="3" class="form-control" placeholder="在此收入聊天內容。ctrl/command+enter 換行，enter 發送"></textarea>&nbsp;
+          <input @click="sendMessage" type="button" value="發送(Enter)" class="btn-primary form-control">
         </div>
       </div>
     </div>
@@ -55,43 +53,55 @@
 </template>
 <script>
 export default {
-  data(){
-    return{
-      nickname:"",
-      msglist:{
-        chat:[],
-        invitelist:[]
-      }
-      
-    }
+  data() {
+    return {
+      ws: {},
+      nickname: "",
+      chatmessage: "",
+      msglist: {
+        chat: [],
+        invitelist: [],
+      },
+    };
   },
   mounted() {},
   methods: {
+    sendMessage() {
+      let msg = JSON.stringify({ content: this.chatmessage });
+
+      this.ws.send(msg);
+    },
     enterChatRoom() {
-      let domain =location.hostname;
-      let ws = new WebSocket("ws://"+domain+":2022/ws?nickname="+this.nickname);
-      ws.onerror = function (evt) {
+      let domain = location.hostname;
+      this.ws = new WebSocket(
+        "ws://" + domain + ":2022/ws?nickname=" + this.nickname
+      );
+      this.ws.onerror = function (evt) {
         console.log(evt);
       };
-      ws.onopen = function () {
+      this.ws.onopen = function () {
         console.log("Already connected");
         // WebSocket 已连接上的回调
       };
-      ws.onmessage=(evt)=>{
+      this.ws.onmessage = (evt) => {
         let data = JSON.parse(evt.data);
-        let type =data.type;
-        switch(type){
+        let type = data.type;
+        switch (type) {
           case 1:
             this.msglist.chat.push(data);
-          break;
+            break;
           case 2:
             this.msglist.invitelist.push(data);
-          break;
+            break;
+          case 3:
+            this.msglist.chat.push(data);
+            break;
         }
-
-
-      }
+      };
     },
+    leaveChatRoom(){
+      this.ws.close();
+    }
   },
 };
 </script>
