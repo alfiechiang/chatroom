@@ -59,7 +59,6 @@ func (b *Brodcast) ReceiveMessage(u *User) {
 			log.Println(err)
 			return
 		}
-		fmt.Println("ceffefe")
 
 		ty, err := strconv.Atoi(receiveMsg["type"])
 		if err != nil {

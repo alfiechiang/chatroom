@@ -14,7 +14,7 @@
           <div>聊天内容</div>
           <div class="msg-list" id="msg-list">
             <div class="message" v-for="msg in msglist.chat" v-bind:key="msg.content" :class="{ system: msg.type==0|| msg.type==5,other:msg.type==3&&nickname!==msg.nickname,myself:nickname==msg.nickname} ">
-                <span class="content" style="white-space: pre-wrap;">{{msg.content}}</span>
+              <span class="content" style="white-space: pre-wrap;">{{msg.content}}</span>
             </div>
           </div>
         </div>
@@ -65,7 +65,7 @@ export default {
   mounted() {},
   methods: {
     sendMessage() {
-      let msg = JSON.stringify({ content: this.chatmessage,type:'3'});
+      let msg = JSON.stringify({ content: this.chatmessage, type: "3" });
 
       this.ws.send(msg);
     },
@@ -85,7 +85,7 @@ export default {
         let data = JSON.parse(evt.data);
         let type = data.type;
         switch (type) {
-           case 0:
+          case 0:
             this.msglist.chat.push(data);
             break;
           case 1:
@@ -98,20 +98,32 @@ export default {
             this.msglist.chat.push(data);
             break;
           case 5:
-            if(this.msglist.chat.nickname!==this.nickname){
+
+            if (this.msglist.chat.nickname !== this.nickname) {
               this.msglist.chat.push(data);
+            }else{
+              this.msglist = [];
+              this.nickname = "";
+              this.ws.close();
             }
-            this.msglist=[];
-            this.nickname='';
-            this.ws.close();
+
+            // if (this.msglist.chat.nickname == this.nickname) {
+            //   this.msglist = [];
+            //   this.nickname = "";
+            //   this.ws.close();
+            // }
+
             break;
         }
       };
     },
     leaveChatRoom() {
-      let msg = JSON.stringify({ content: "用戶已離開",type:'5' });
+      let msg = JSON.stringify({
+        content: this.nickname + ":用戶已離開",
+        type: "5",
+      });
       this.ws.send(msg);
-     // this.ws.close();
+      // this.ws.close();
     },
   },
 };
